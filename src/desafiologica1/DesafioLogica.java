@@ -21,25 +21,29 @@ import java.util.List;
  */
 public class DesafioLogica {
 
+    private static BufferedReader lerArquivo(String nomeArquivo) throws FileNotFoundException {
+        File blacklist = new File(new DesafioLogica().getApplicationPath() + "\\" + nomeArquivo);
+        FileReader reader = new FileReader(blacklist);
+        return new BufferedReader(reader);
+    }
+    
     /**
      * @param args the command line arguments
      * @throws java.io.FileNotFoundException
      */
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        File file = new File("c:/teste.csv");
-        FileReader reader = new FileReader(file);
-        BufferedReader buffer = new BufferedReader(reader);
+        BufferedReader bfNumeros = lerArquivo("\\teste.csv");
 
         List<Linha> linhas = new ArrayList<>();
 
         String linha = null;
-        while ((linha = buffer.readLine()) != null) {
+        while ((linha = bfNumeros.readLine()) != null) {
             String numero = linha.split(";")[0];
             String msg = linha.split(";")[1];
 
-            Linha linhaExistente = verificaLinha(linhas, numero, msg);
+            boolean linhaValida = validarLinha(linhas, numero, msg);
             
-            if (linhaExistente == null) {
+            if (linhaValida) {
                 linhas.add(new Linha(numero, msg));
             }
         }
@@ -57,16 +61,29 @@ public class DesafioLogica {
             System.out.println("Número: "+linha1.getNumero() + ", Mensagem: " + linha1.getMensagem());
         }
 
-        buffer.close();
+        bfNumeros.close();
     }
 
-    private static Linha verificaLinha(List<Linha> linhas, String numero, String msg) {
+    private static boolean validarLinha(List<Linha> linhas, String numero, String msg) throws IOException {
+        BufferedReader bfBlacklist = lerArquivo("blacklist.csv");
+        
         for (Linha linha : linhas) {
             if (linha.getNumero().equals(numero) && linha.getMensagem().equals(msg)){
-                return linha;
+                return false;
             }
         }
-        return null;
+        
+        String linha = null;
+        while ((linha = bfBlacklist.readLine()) != null) {
+            if (linha.equals(numero))
+                return false;
+        }
+        return true;
     }
 
+    private String getApplicationPath() { 
+        String url = getClass().getResource(getClass().getSimpleName() + ".class").getPath();  
+        File dir = new File(url).getParentFile(); 
+        return dir.getAbsolutePath();
+    }
 }
